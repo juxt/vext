@@ -10,7 +10,6 @@
    (io.vertx.core MultiMap)
    (io.vertx.reactivex.core.buffer Buffer)
    (io.vertx.core.http HttpServerOptions)
-   (io.vertx.reactivex.core Vertx)
    (io.vertx.reactivex.core.http HttpServer)))
 
 (defn ^HttpServer run-http-server
