@@ -13,7 +13,7 @@
    (io.vertx.reactivex.core.http HttpServer)))
 
 (defn ^HttpServer run-http-server
-  [router {:keys [vertx port] :as opts}]
+  [ring-handler {:keys [vertx port] :as opts}]
   (let [server-options
         (..
          (new HttpServerOptions)
@@ -52,7 +52,7 @@
 
                 :apex.vertx/vertx vertx
                 #_(->RingHeaders (.headers req))}]
-           (router
+           (ring-handler
             ring-req
             ;; Respond function
             (fn [{:keys [status headers body]}]
