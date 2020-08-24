@@ -6,4 +6,4 @@
   io.vertx/vertx-rx-java2 {:mvn/version "3.9.0"}
   io.netty/netty-transport-native-epoll {:mvn/version "4.1.15.Final"}
   juxt/flow {:git/url "https://github.com/juxt/flow.git"
-             :git/sha "54692d4a45fae3a13086aaf4362bb17b59274b0c"}}}
+             :sha "54692d4a45fae3a13086aaf4362bb17b59274b0c"}}}
