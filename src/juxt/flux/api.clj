@@ -48,9 +48,9 @@
                 ;; You need access to this for when there is no
                 ;; alternative but to use a lower-level Vert.x API,
                 ;; such as multipart uploads.
-                :apex.vertx/request req ; low-level interface
+                :juxt.flux/request req ; low-level interface
 
-                :apex.vertx/vertx vertx
+                :juxt.flux/vertx vertx
                 #_(->RingHeaders (.headers req))}]
            (ring-handler
             ring-req

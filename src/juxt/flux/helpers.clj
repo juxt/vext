@@ -30,7 +30,7 @@
      (handler req))
     ([req respond raise]
      (.bodyHandler
-      (:apex.vertx/request req)
+      (:juxt.flux/request req)
       (h (fn [buffer]
            (handler
             (assoc
