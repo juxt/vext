@@ -127,3 +127,11 @@
                (end))))))))
 
      listen)))
+
+(defn handle-body
+  "Receive the entire request body and pass as a buffer to the body-handler"
+  [req body-handler]
+  (assert (:juxt.flux/request req) "Request was not created by Flux")
+  (.bodyHandler
+   (:juxt.flux/request req)
+   (h body-handler)))
