@@ -59,9 +59,14 @@
               ;; header-map here is only to allow us to preserve the
               ;; case of response headers, while potentially retrieving
               ;; them. Probably better to keep all as lower-case.
+              (when (nil? status)
+                (throw (ex-info "Status not set in response" {})))
+
               (let [header-map (cond-> (MultiMap/caseInsensitiveMultiMap)
                                  headers (.. (addAll headers)))
                     content-length (.get header-map "content-length")
+                    _ (assert req)
+                    _ (assert (.response req))
                     response
                     (..
                      req
