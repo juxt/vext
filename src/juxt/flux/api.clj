@@ -8,6 +8,7 @@
    [org.reactivestreams.flow :as rs])
   (:import
    (io.vertx.core MultiMap)
+   (io.vertx.core.net PemKeyCertOptions)
    (io.vertx.reactivex.core.buffer Buffer)
    (io.vertx.core.http HttpServerOptions)
    (io.vertx.reactivex.core.http HttpServer)))
@@ -17,6 +18,12 @@
   (let [server-options
         (..
          (new HttpServerOptions)
+         (setPemKeyCertOptions
+          (..
+           (new PemKeyCertOptions)
+           (setKeyPath "tls/key.pem")
+           (setCertPath "tls/cert.pem")))
+         (setSsl true)
          (setLogActivity (get opts :vertx/log-activity false)))
         server
         (..
