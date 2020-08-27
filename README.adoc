@@ -1,0 +1,5 @@
+= Flux
+
+Flux is a Clojure library for Vert.x that provides the standard Ring abstraction
+we all know and love, but with the full asynchronous non-blocking benefits of
+Vert.x and the underlying Netty engine.
