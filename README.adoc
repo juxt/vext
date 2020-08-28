@@ -6,7 +6,7 @@ Vert.x and the underlying Netty engine.
 
 == Status
 
-Spin is still under active development and is ALPHA status, meaning that the API
+Flux is still under active development and is ALPHA status, meaning that the API
 should be considered unstable and likely to change.
 
 == Relationship to other Clojure libraries
