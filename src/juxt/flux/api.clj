@@ -18,12 +18,12 @@
   (let [server-options
         (..
          (new HttpServerOptions)
-         (setPemKeyCertOptions
+         #_(setPemKeyCertOptions
           (..
            (new PemKeyCertOptions)
            (setKeyPath "tls/key.pem")
            (setCertPath "tls/cert.pem")))
-         (setSsl true)
+         #_(setSsl true)
          (setLogActivity (get opts :vertx/log-activity false)))
         server
         (..
