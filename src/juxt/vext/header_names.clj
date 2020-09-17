@@ -1,6 +1,6 @@
 ;; Copyright © 2020, JUXT LTD.
 
-(ns juxt.flux.header-names
+(ns juxt.vext.header-names
   (:require
    [clojure.string :as str]
    [clojure.set :as set]))

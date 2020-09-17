@@ -1,6 +1,6 @@
 ;; Copyright © 2020, JUXT LTD.
 
-(ns juxt.flux.helpers
+(ns juxt.vext.helpers
   (:import
    (io.vertx.core Handler)))
 
@@ -30,7 +30,7 @@
      (handler req))
     ([req respond raise]
      (.bodyHandler
-      (:juxt.flux/request req)
+      (:juxt.vext/request req)
       (h (fn [buffer]
            (handler
             (assoc

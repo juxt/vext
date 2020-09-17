@@ -1,6 +1,6 @@
 ;; Copyright © 2020, JUXT LTD.
 
-(ns juxt.flux.flowable
+(ns juxt.vext.flowable
   (:refer-clojure :exclude [map count merge-with repeat])
   (:import
    (io.reactivex.functions Function)))

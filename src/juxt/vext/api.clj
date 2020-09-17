@@ -1,11 +1,11 @@
 ;; Copyright © 2020, JUXT LTD.
 
-(ns juxt.flux.api
+(ns juxt.vext.api
   (:require
-   juxt.flux.flow
-   [juxt.flux.helpers :refer [h]]
+   juxt.vext.flow
+   [juxt.vext.helpers :refer [h]]
    [clojure.string :as string]
-   [juxt.flux.header-names :refer [header-canonical-case]]
+   [juxt.vext.header-names :refer [header-canonical-case]]
    [juxt.flow.protocols :as flow])
   (:import
    (io.vertx.core MultiMap)
@@ -56,9 +56,9 @@
                 ;; You need access to this for when there is no
                 ;; alternative but to use a lower-level Vert.x API,
                 ;; such as multipart uploads.
-                :juxt.flux/request req ; low-level interface
+                :juxt.vext/request req ; low-level interface
 
-                :juxt.flux/vertx vertx
+                :juxt.vext/vertx vertx
                 #_(->RingHeaders (.headers req))}]
            (ring-handler
             ring-req
@@ -139,7 +139,7 @@
 (defn handle-body
   "Receive the entire request body and pass as a buffer to the body-handler"
   [req body-handler]
-  (assert (:juxt.flux/request req) "Request was not created by Flux")
+  (assert (:juxt.vext/request req) "Request was not created by Vext")
   (.bodyHandler
-   (:juxt.flux/request req)
+   (:juxt.vext/request req)
    (h body-handler)))

@@ -1,6 +1,6 @@
 ;; Copyright © 2020, JUXT LTD.
 
-(ns juxt.flux.flow
+(ns juxt.vext.flow
   (:require [juxt.flow.protocols :as flow]))
 
 ;; Adapt org.reactivestreams.Subscription to the Clojure protocol
