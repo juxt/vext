@@ -1,6 +1,6 @@
 ;; Copyright © 2020, JUXT LTD.
 
-{:paths ["src"]
+{:paths ["src" "test"]
  :deps
  {io.vertx/vertx-core {:mvn/version "3.9.2"}
   io.vertx/vertx-rx-java2 {:mvn/version "3.9.2"}
