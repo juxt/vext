@@ -4,10 +4,10 @@
   (:import
    (io.vertx.core Handler)))
 
-(defn h [cb]
+(defn h [f]
   (reify Handler
-    (handle [_ t]
-      (cb t))))
+    (handle [_ e]
+      (f e))))
 
 (defn har [{:keys [on-success on-failure]}]
   (h (fn [ar]
