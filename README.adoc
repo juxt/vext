@@ -1,8 +1,13 @@
 = Vext
 
-Vext is a Clojure library for Vert.x that provides the standard Ring abstraction
-we all know and love, but with the full asynchronous non-blocking benefits of
-Vert.x and the underlying Netty engine.
+Vext is a Clojure wrapper/shim on Vert.x and RxJava 2.
+
+* A Ring adapter supporting the asynchronous Ring API
+
+* Experimental support for non-blocking streams on top of Ring
+
+* Wrappers on RxJava2 classes (e.g. Flowable) to make streams feel more like
+  Clojure sequences.
 
 == Status
 
