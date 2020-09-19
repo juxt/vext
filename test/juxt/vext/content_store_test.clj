@@ -79,7 +79,7 @@
                {:on-success
                 (fn [_]
                   (let [filename
-                        (.encodeToString encoder (.digest (:digest @state)))]
+                        (.encodeToString digest-encoder (.digest (:digest @state)))]
                     (println "TODO: Rename afile to " filename)))
                 :on-error (fn [t] (println "Error closing" t))})))
            :on-error (fn [t] (println "Error flushing" t))}))))))
