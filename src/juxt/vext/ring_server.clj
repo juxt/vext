@@ -1,6 +1,6 @@
 ;; Copyright © 2020, JUXT LTD.
 
-(ns juxt.vext.api
+(ns juxt.vext.ring-server
   (:require
    juxt.vext.flow
    [juxt.vext.helpers :refer [h]]
@@ -96,7 +96,6 @@
                 ;; Now, make flowable
 
                 ;; If the body is not a String, InputStream etc..
-
 
                 ;; On Java 9 and above, body may return a
                 ;; java.util.concurrent.Flow.Publisher.  Java 8 and below should
