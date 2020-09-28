@@ -2,57 +2,42 @@
 
 (ns juxt.vext.content-store-test
   (:require
+   [clojure.test :refer [is deftest]]
    [clojure.java.io :as io]
-   [juxt.flow.protocols :as flow]
-   [juxt.vext.flowable :as f]
-   [juxt.vext.helpers :refer [h har]]
    [juxt.vext.content-store :as cs])
   (:import
-
    (io.vertx.reactivex.core Vertx)
-   (io.vertx.core.file OpenOptions)
-   (io.reactivex Flowable Single)
-   (io.reactivex.processors MulticastProcessor)
-   (io.vertx.reactivex.core.buffer Buffer)
-   (org.reactivestreams Subscriber)
-   (org.kocakosm.jblake2 Blake2b)))
+   (io.reactivex Flowable)
+   (io.vertx.reactivex.core.buffer Buffer)))
 
-;; This time, try to multicast the flowable
+(deftest content-store-test
+  (let [ITEMS 10
 
-(def digest-encoder (java.util.Base64/getUrlEncoder))
+        ITEM_SIZE 1024
 
-;; TODO: This should return a Single, that when complete contains the digest and file info
+        random-str (fn []
+                     (->>
+                      #(rand-nth (range (int \A) (inc (int \Z))))
+                      (repeatedly)
+                      (take ITEM_SIZE)
+                      (map char)
+                      (apply str)))
 
-;; TODO: Error handling
+        buffers (doall
+                 (map
+                  (fn [s] (Buffer/buffer (.getBytes s)))
+                  (repeatedly ITEMS random-str)))
 
-(let [ITEMS 10
+        ;; Go from buffers to iterable/array to static flowable
+        flowable (Flowable/fromIterable buffers)
 
-      ITEM_SIZE 1024
+        vertx (Vertx/vertx)
 
-      random-str (fn []
-                   (->>
-                    #(rand-nth (range (int \A) (inc (int \Z))))
-                    (repeatedly)
-                    (take ITEM_SIZE)
-                    (map char)
-                    (apply str)))
+        dir (io/file "/tmp/content-store")
+        _ (.mkdirs dir)
 
-      buffers (doall
-               (map
-                (fn [s] (Buffer/buffer (.getBytes s)))
-                (repeatedly ITEMS random-str)))
+        content-store (cs/->VertxFileContentStore vertx dir dir)]
 
-      ;; Go from buffers to iterable/array to static flowable
-      flowable (Flowable/fromIterable buffers)
-
-      vertx (Vertx/vertx)
-
-      dir (io/file "/tmp/content-store")
-      _ (.mkdirs dir)
-
-      content-store (cs/->VertxFileContentStore vertx dir dir)
-]
-
-  (cs/store-content content-store flowable (fn [t] (println "Complete:" (pr-str t))))
-
-  )
+    (let [p (promise)]
+      (cs/store-content content-store flowable (fn [v] (deliver p v)))
+      (is (= #{:content-hash-str :file} (set (keys @p)))))))
