@@ -54,9 +54,10 @@
                 (.renameTo tmp-file dest-file)
                 (Single/just (assoc m :file dest-file))))))]
 
-      ;; Stream the content to the temporary file
+      ;; 1. Stream the content to the temporary file
       (.subscribe multicaster (.toSubscriber afile))
 
+      ;; 2. Subscribe to the content-hasher (must be after 1.)
       (.subscribe
        single
        (reify
@@ -64,5 +65,6 @@
          (accept [_ t]
            (on-complete t))))
 
-      ;; Connect the processor to the upstream source
+      ;; 3. Connect the processor to the upstream source
+      ;; (must be after 1. and 2.)
       (.subscribe content-stream multicaster))))
