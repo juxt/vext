@@ -39,5 +39,13 @@
         content-store (cs/->VertxFileContentStore vertx dir dir)]
 
     (let [p (promise)]
-      (cs/store-content content-store flowable (fn [v] (deliver p v)))
-      (is (= #{:content-hash-str :file} (set (keys @p)))))))
+      (cs/store-content
+       content-store
+       flowable
+       (fn [v]
+         (deliver p (assoc v :exists? (.exists (:file v))))
+         (when (.exists (:file v))
+           (.delete (:file v)))))
+      (let [result @p]
+        (is (= #{:content-hash-str :file :exists?} (set (keys result))))
+        (is (:exists? result))))))
