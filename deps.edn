@@ -9,4 +9,7 @@
   #_juxt/flow #_{:git/url "https://github.com/juxt/flow.git"
                  :sha "60f72d81a04c3849f552357c9b040b5d0006f9e5"}
 
+  ;; Required for content-store
+  ;; RFC 7693
+  org.kocakosm/jblake2 {:mvn/version "0.4"}
   }}

@@ -1,7 +1,9 @@
 ;; Copyright © 2020, JUXT LTD.
 
+;; Clojure shim upon io.reactivex.Flowable
+
 (ns juxt.vext.flowable
-  (:refer-clojure :exclude [map count merge-with repeat])
+  (:refer-clojure :exclude [map count merge-with repeat reduce])
   (:import
    (io.reactivex.functions Function)))
 
@@ -50,3 +52,10 @@
 (defn as-consumer [f]
   (reify io.reactivex.functions.Consumer
     (accept [_ t] (f t))))
+
+(defn reduce [seed bifn f]
+  (.reduce
+   f
+   seed
+   (reify io.reactivex.functions.BiFunction
+     (apply [_ acc i] (bifn acc i)))))
