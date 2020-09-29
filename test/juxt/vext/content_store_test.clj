@@ -2,7 +2,7 @@
 
 (ns juxt.vext.content-store-test
   (:require
-   [clojure.test :refer [is deftest]]
+   [clojure.test :refer [is deftest testing]]
    [clojure.java.io :as io]
    [juxt.vext.content-store :as cs])
   (:import
@@ -47,24 +47,61 @@
         dir (io/file "/tmp/content-store")
         _ (.mkdirs dir)
 
-        content-store (cs/->VertxFileContentStore vertx dir dir)]
+        content-store (cs/->VertxFileContentStore vertx dir dir)
 
-    (let [p (promise)
-          publisher (cs/post-content content-store flowable)]
+        subscribe-result
+        (fn [publisher p]
+          (.subscribe
+           publisher
+           (reify io.reactivex.functions.Consumer
+             (accept [_ v]
+               (deliver p (assoc v :exists? (.exists (:file v))))))
+           ;; Error handler
+           (reify io.reactivex.functions.Consumer
+             (accept [_ t]
+               (deliver p {:error t})))))]
 
-      (is publisher)
+    (testing "Success"
+      (let [p (promise)
+            publisher (cs/post-content content-store flowable)]
 
-      (.subscribe
-       publisher
-       (reify io.reactivex.functions.Consumer
-         (accept [_ v]
-           (deliver p (assoc v :exists? (.exists (:file v)))))))
+        (is publisher)
+        (subscribe-result publisher p)
 
-      (let [result (deref p 1 {:error "Timeout!"})]
-        (is (not (:error result)))
-        (is (= #{:k :file :exists?} (set (keys result))))
-        (is (:exists? result))
-        (is (= (* ITEMS ITEM_SIZE) (.length (:file result))))
-        (is (= (content-hash-of-file (:file result)) (:k result)))
-        (when (.exists (:file result))
-          (.delete (:file result)))))))
+        (let [result (deref p 1 {:error "Timeout!"})]
+          (is (not (:error result)))
+          (is (= #{:k :file :exists?} (set (keys result))))
+          (is (:exists? result))
+          (is (= (* ITEMS ITEM_SIZE) (.length (:file result))))
+          (is (= (content-hash-of-file (:file result)) (:k result)))
+          (when (.exists (:file result))
+            (.delete (:file result))))))
+
+    (testing "Failure due to a bad incoming buffer"
+      (let [p (promise)
+            publisher (cs/post-content content-store (Flowable/error (ex-info "Bad buffer" {})))]
+
+        (is publisher)
+        (subscribe-result publisher p)
+
+        (let [result (deref p 1 {:error "Timeout!"})]
+          (is (:error result))
+          (is (= #{:error} (set (keys result))))
+          (is (= "Bad buffer" (.getMessage (:error result)))))))
+
+    (testing "Failure due to timeout"
+      (let [p (promise)
+            publisher (cs/post-content
+                       content-store
+                       (..
+                        flowable
+                        onBackpressureBuffer
+                        (delay 100 java.util.concurrent.TimeUnit/MILLISECONDS)))]
+
+        (is publisher)
+        (subscribe-result publisher p)
+
+        (let [result (deref p 10 {:error "Timeout!"})]
+          (is (:error result))
+          (is (= #{:error} (set (keys result))))
+          (is (= "Timeout!" (:error result))))))))
