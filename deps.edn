@@ -6,8 +6,6 @@
   io.vertx/vertx-rx-java2 {:mvn/version "3.9.2"}
   io.vertx/vertx-reactive-streams {:mvn/version "3.9.2"}
   io.netty/netty-transport-native-epoll {:mvn/version "4.1.15.Final"}
-  #_juxt/flow #_{:git/url "https://github.com/juxt/flow.git"
-                 :sha "60f72d81a04c3849f552357c9b040b5d0006f9e5"}
 
   ;; Required for content-store
   ;; RFC 7693
