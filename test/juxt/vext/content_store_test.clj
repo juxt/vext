@@ -31,31 +31,36 @@
 
 (defn make-random-flowable [n-items item-size]
   (Flowable/fromIterable
-   (map
-    (fn [s] (Buffer/buffer (.getBytes s)))
-    (repeatedly n-items #(random-str item-size)))))
+   ;; The doall here makes timings more
+   ;; accurate, since much of the time is
+   ;; spent on the creation of the random
+   ;; flowables!
+   (doall
+    (map
+     (fn [s] (Buffer/buffer (.getBytes s)))
+     (repeatedly n-items #(random-str item-size))))))
+
+(defn make-content-store []
+  (let [vertx (Vertx/vertx)
+        dir (io/file "/tmp/content-store")
+        _ (.mkdirs dir)]
+    (cs/->VertxFileContentStore vertx dir dir)))
+
+(def ITEM_SIZE 1024)
+(def ITEMS 10)
 
 (deftest content-store-test
-  (let [ITEM_SIZE 1024 ITEMS 10
-
-        flowable
-        (make-random-flowable ITEMS ITEM_SIZE)
-
-        vertx (Vertx/vertx)
-
-        dir (io/file "/tmp/content-store")
-        _ (.mkdirs dir)
-        content-store
-        (cs/->VertxFileContentStore vertx dir dir)
+  (let [content-store (make-content-store)
 
         subscribe-result
         (fn [publisher p]
           (.subscribe
            publisher
+           ;; onNext
            (reify io.reactivex.functions.Consumer
              (accept [_ v]
                (deliver p (assoc v :exists? (.exists (:file v))))))
-           ;; Error handler
+           ;; onError
            (reify io.reactivex.functions.Consumer
              (accept [_ t]
                (deliver p {:error t})))))]
@@ -64,7 +69,7 @@
       (let [p (promise)
             publisher (cs/post-content
                        content-store
-                       flowable)]
+                       (make-random-flowable ITEMS ITEM_SIZE))]
 
         (is publisher)
         (subscribe-result publisher p)
@@ -99,7 +104,7 @@
             (cs/post-content
              content-store
              (..
-              flowable
+              (make-random-flowable ITEMS ITEM_SIZE)
               onBackpressureBuffer
               (delay 100 java.util.concurrent.TimeUnit/MILLISECONDS)))]
 
@@ -109,4 +114,36 @@
         (let [result (deref p 10 {:error "Timeout!"})]
           (is (:error result))
           (is (= #{:error} (set (keys result))))
-          (is (= "Timeout!" (:error result))))))))
+          (is (= "Timeout!" (:error result))))))
+
+    (testing "Multiple flowables"
+
+      (let [p (promise)
+            a (atom {:files []})
+            flowable
+            (Flowable/merge
+             (doall
+              (for [_ (range 10)]
+                (cs/post-content
+                 (make-content-store)
+                 (make-random-flowable ITEMS ITEM_SIZE)))))]
+
+        (.subscribe
+         flowable
+         ;; onNext
+         (reify io.reactivex.functions.Consumer
+           (accept [_ v]
+             (println "End of file" v)
+             (swap! a update :files conj v)))
+
+         ;; onError
+         (reify io.reactivex.functions.Consumer
+           (accept [_ t]))
+
+         ;; onComplete
+         (reify io.reactivex.functions.Action
+           (run [_]
+             (deliver p @a))))
+
+        (let [result (deref p 10 {:error "Timeout!"})]
+          (is (= 10 (count (:files result)))))))))
