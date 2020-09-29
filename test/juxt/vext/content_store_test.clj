@@ -18,21 +18,23 @@
      (.getBytes (slurp f)))
     (.encodeToString (java.util.Base64/getUrlEncoder) (.digest b))))
 
-#_(content-hash-of-file
- (io/file "/tmp/content-store/AiyBwjmE_ya-cZFpVme7EjpVfmLFhEr8v3_gGTsuimCNQrpGdlvyMw=="))
+(comment
+  (content-hash-of-file
+   (io/file "/tmp/content-store/AiyBwjmE_ya-cZFpVme7EjpVfmLFhEr8v3_gGTsuimCNQrpGdlvyMw==")))
 
 (deftest content-store-test
   (let [ITEMS 10
 
         ITEM_SIZE 1024
 
-        random-str (fn []
-                     (->>
-                      #(rand-nth (range (int \A) (inc (int \Z))))
-                      (repeatedly)
-                      (take ITEM_SIZE)
-                      (map char)
-                      (apply str)))
+        random-str
+        (fn []
+          (->>
+           #(rand-nth (range (int \A) (inc (int \Z))))
+           (repeatedly)
+           (take ITEM_SIZE)
+           (map char)
+           (apply str)))
 
         buffers (doall
                  (map
@@ -47,7 +49,8 @@
         dir (io/file "/tmp/content-store")
         _ (.mkdirs dir)
 
-        content-store (cs/->VertxFileContentStore vertx dir dir)
+        content-store
+        (cs/->VertxFileContentStore vertx dir dir)
 
         subscribe-result
         (fn [publisher p]
@@ -63,7 +66,9 @@
 
     (testing "Success"
       (let [p (promise)
-            publisher (cs/post-content content-store flowable)]
+            publisher (cs/post-content
+                       content-store
+                       flowable)]
 
         (is publisher)
         (subscribe-result publisher p)
@@ -79,7 +84,9 @@
 
     (testing "Failure due to a bad incoming buffer"
       (let [p (promise)
-            publisher (cs/post-content content-store (Flowable/error (ex-info "Bad buffer" {})))]
+            publisher (cs/post-content
+                       content-store
+                       (Flowable/error (ex-info "Bad buffer" {})))]
 
         (is publisher)
         (subscribe-result publisher p)
@@ -91,12 +98,14 @@
 
     (testing "Failure due to timeout"
       (let [p (promise)
-            publisher (cs/post-content
-                       content-store
-                       (..
-                        flowable
-                        onBackpressureBuffer
-                        (delay 100 java.util.concurrent.TimeUnit/MILLISECONDS)))]
+
+            publisher
+            (cs/post-content
+             content-store
+             (..
+              flowable
+              onBackpressureBuffer
+              (delay 100 java.util.concurrent.TimeUnit/MILLISECONDS)))]
 
         (is publisher)
         (subscribe-result publisher p)
