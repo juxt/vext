@@ -2,12 +2,12 @@
 
 (ns juxt.vext.content-store-test
   (:require
-   [clojure.test :refer [is deftest testing]]
    [clojure.java.io :as io]
+   [clojure.test :refer [is deftest testing]]
    [juxt.vext.content-store :as cs])
   (:import
-   (io.vertx.reactivex.core Vertx)
    (io.reactivex Flowable)
+   (io.vertx.reactivex.core Vertx)
    (io.vertx.reactivex.core.buffer Buffer)
    (org.kocakosm.jblake2 Blake2b)))
 
@@ -30,15 +30,16 @@
    (apply str)))
 
 (defn make-random-flowable [n-items item-size]
-  (Flowable/fromIterable
-   ;; The doall here makes timings more
-   ;; accurate, since much of the time is
-   ;; spent on the creation of the random
-   ;; flowables!
-   (doall
-    (map
-     (fn [s] (Buffer/buffer (.getBytes s)))
-     (repeatedly n-items #(random-str item-size))))))
+  (let [s (random-str item-size)]
+    (Flowable/fromIterable
+     ;; The doall here makes timings more
+     ;; accurate, since much of the time is
+     ;; spent on the creation of the random
+     ;; flowables!
+     (doall
+      (map
+       (fn [s] (Buffer/buffer (.getBytes s)))
+       (repeat n-items s))))))
 
 (defn make-content-store []
   (let [vertx (Vertx/vertx)
@@ -144,5 +145,49 @@
            (run [_]
              (deliver p @a))))
 
+
         (let [result (deref p 10 {:error "Timeout!"})]
-          (is (= 10 (count (:files result)))))))))
+          (is (= 10 (count (:files result)))))))
+
+
+    (testing "Multiple flowables with errors"
+
+      (let [p (promise)
+            a (atom {:files []
+                     :errors []
+                     :completed false})
+            flowable
+            (Flowable/merge
+             (shuffle
+              (conj
+               (doall
+                (for [_ (range 9)]
+                  (cs/post-content
+                   (make-content-store)
+                   (make-random-flowable ITEMS ITEM_SIZE))))
+               (Flowable/error (ex-info "Bad flowable 1" {}))
+               (Flowable/error (ex-info "Bad flowable 2" {})))))]
+
+        (.subscribe
+         flowable
+         ;; onNext
+         (reify io.reactivex.functions.Consumer
+           (accept [_ v]
+             (swap! a update :files conj v)))
+
+         ;; onError
+         (reify io.reactivex.functions.Consumer
+           (accept [_ t]
+             (swap! a update :errors conj t)
+             (deliver p @a)))
+
+         ;; onComplete
+         (reify io.reactivex.functions.Action
+           (run [_]
+             (swap! a assoc :completed true)
+             (deliver p @a))))
+
+        (let [result (deref p 10 {:error "Timeout!"})]
+          (is (<= 0 (count (:files result)) 9))
+          (is (= 1 (count (:errors result))))
+          (is (false? (:completed result))))))))
