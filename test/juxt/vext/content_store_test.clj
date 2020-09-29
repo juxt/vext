@@ -22,33 +22,29 @@
   (content-hash-of-file
    (io/file "/tmp/content-store/AiyBwjmE_ya-cZFpVme7EjpVfmLFhEr8v3_gGTsuimCNQrpGdlvyMw==")))
 
+(defn random-str [item-size]
+  (->>
+   #(rand-nth (range (int \A) (inc (int \Z))))
+   (repeatedly item-size)
+   (map char)
+   (apply str)))
+
+(defn make-random-flowable [n-items item-size]
+  (Flowable/fromIterable
+   (map
+    (fn [s] (Buffer/buffer (.getBytes s)))
+    (repeatedly n-items #(random-str item-size)))))
+
 (deftest content-store-test
-  (let [ITEMS 10
+  (let [ITEM_SIZE 1024 ITEMS 10
 
-        ITEM_SIZE 1024
-
-        random-str
-        (fn []
-          (->>
-           #(rand-nth (range (int \A) (inc (int \Z))))
-           (repeatedly)
-           (take ITEM_SIZE)
-           (map char)
-           (apply str)))
-
-        buffers (doall
-                 (map
-                  (fn [s] (Buffer/buffer (.getBytes s)))
-                  (repeatedly ITEMS random-str)))
-
-        ;; Go from buffers to iterable/array to static flowable
-        flowable (Flowable/fromIterable buffers)
+        flowable
+        (make-random-flowable ITEMS ITEM_SIZE)
 
         vertx (Vertx/vertx)
 
         dir (io/file "/tmp/content-store")
         _ (.mkdirs dir)
-
         content-store
         (cs/->VertxFileContentStore vertx dir dir)
 
