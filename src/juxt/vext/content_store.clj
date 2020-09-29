@@ -1,6 +1,7 @@
 ;; Copyright © 2020, JUXT LTD.
 
-;; An asynchronous
+;; An asynchronous content-store which can take a (reactive) publisher of
+;; buffers and save to a backing store.
 
 (ns juxt.vext.content-store
   (:require
@@ -13,14 +14,23 @@
    (org.kocakosm.jblake2 Blake2b)))
 
 (defprotocol ContentStore
-  (store-content [_ ^org.reactivestreams.Publisher content-stream]
-    "Store the content stream. Call on-complete with results when done."))
+  (get-content [_ k] "Get the content, as a publisher, mapped to the key, k")
+  (post-content [_ ^org.reactivestreams.Publisher content-stream]
+    "Store the content stream. Return a publisher which publishes a single map
+    representing the result of the store, or an error. The key used is returned
+    as the :k entry of this map."))
 
+;; A Vertx based file storage implementation of the ContentStore protocol. The
+;; implementation This returns a publisher which publishes the result. The
+;; result contains the file and content-hash string used in its name.
 (defrecord VertxFileContentStore [^io.vertx.reactivex.core.Vertx vertx
                                   ^java.io.File dest-dir
                                   ^java.io.File tmp-dir]
   ContentStore
-  (store-content [_ content-stream]
+  (get-content [_ k]
+    nil
+    )
+  (post-content [_ content-stream]
     (let [tmp-file (io/file tmp-dir (str (java.util.UUID/randomUUID)))
           fs (.fileSystem vertx)
           afile (.openBlocking
@@ -29,7 +39,6 @@
                  (.. (new OpenOptions)
                      (setCreate true)
                      (setWrite true)))
-
 
           ;; Multicast the content stream to a temporary file and a content
           ;; hasher.
@@ -49,12 +58,12 @@
            (f/map
             (fn [digest]
               (Single/just
-               {:content-hash-str (.encodeToString (java.util.Base64/getUrlEncoder) (.digest digest))})))
+               {:k (.encodeToString (java.util.Base64/getUrlEncoder) (.digest digest))})))
 
            (f/map
-            (fn [{:keys [content-hash-str] :as m}]
+            (fn [{:keys [k] :as m}]
               ;; Rename the temporary file according to the hash
-              (let [dest-file (io/file dest-dir content-hash-str)]
+              (let [dest-file (io/file dest-dir k)]
                 (.renameTo tmp-file dest-file)
                 ;; Return a map indicating the results
                 (Single/just (assoc m :file dest-file))))))

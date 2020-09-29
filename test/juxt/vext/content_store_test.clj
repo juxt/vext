@@ -50,7 +50,7 @@
         content-store (cs/->VertxFileContentStore vertx dir dir)]
 
     (let [p (promise)
-          publisher (cs/store-content content-store flowable)]
+          publisher (cs/post-content content-store flowable)]
 
       (is publisher)
 
@@ -62,9 +62,9 @@
 
       (let [result (deref p 1 {:error "Timeout!"})]
         (is (not (:error result)))
-        (is (= #{:content-hash-str :file :exists?} (set (keys result))))
+        (is (= #{:k :file :exists?} (set (keys result))))
         (is (:exists? result))
         (is (= (* ITEMS ITEM_SIZE) (.length (:file result))))
-        (is (= (content-hash-of-file (:file result)) (:content-hash-str result)))
+        (is (= (content-hash-of-file (:file result)) (:k result)))
         (when (.exists (:file result))
           (.delete (:file result)))))))
