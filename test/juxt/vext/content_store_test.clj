@@ -133,7 +133,6 @@
          ;; onNext
          (reify io.reactivex.functions.Consumer
            (accept [_ v]
-             (println "End of file" v)
              (swap! a update :files conj v)))
 
          ;; onError
