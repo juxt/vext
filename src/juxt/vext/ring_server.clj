@@ -2,11 +2,9 @@
 
 (ns juxt.vext.ring-server
   (:require
-   juxt.vext.flow
    [juxt.vext.helpers :refer [h]]
    [clojure.string :as string]
-   [juxt.vext.header-names :refer [header-canonical-case]]
-   [juxt.flow.protocols :as flow])
+   [juxt.vext.header-names :refer [header-canonical-case]])
   (:import
    (io.vertx.core MultiMap)
    (io.vertx.core.net PemKeyCertOptions)
@@ -109,8 +107,8 @@
                   (instance? java.io.File body)
                   (. response sendFile (.getAbsolutePath body))
 
-                  (satisfies? flow/Publisher body)
-                  (flow/subscribe body (.toSubscriber response))
+                  #_(satisfies? flow/Publisher body)
+                  #_(flow/subscribe body (.toSubscriber response))
 
                   (and body (= (Class/forName "[B") (.getClass body)))
                   (.. response (write (Buffer/buffer body)) end)
