@@ -190,4 +190,11 @@
         (let [result (deref p 10 {:error "Timeout!"})]
           (is (<= 0 (count (:files result)) 9))
           (is (= 1 (count (:errors result))))
-          (is (false? (:completed result))))))))
+          (is (false? (:completed result))))))
+
+
+    ;; TODO:
+
+    ;; TODO: How about a progress monitor?
+
+    ))
